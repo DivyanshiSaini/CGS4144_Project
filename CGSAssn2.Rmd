@@ -173,7 +173,7 @@ copydataframe_df <- final_mapped_df
 
 # remove the 2 columns
 copydataframe_df <- copydataframe_df[, -which(names(copydataframe_df) == "Ensembl")]
-copydataframe_df <- copydataframe_df[, -which(names(copydataframe_df) == "all_symbol_IDs")]
+copydataframe_df <- copydataframe_df[, -which(names(copydataframe_df) == "first_mapped_symbol_id")]
 
 
 #load the library

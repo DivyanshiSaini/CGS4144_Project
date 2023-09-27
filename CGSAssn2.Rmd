@@ -209,5 +209,22 @@ matrix_size <- dim(copydataframe_df)
 num_genes <- matrix_size[2]  # Number of columns represents the number of genes
 
 
+# meta file columns to rows 
+
+
+# updates
+update_data <- read.delim(file.path("AnalysisFolderNew",
+  results_dir,"Symbol_IDs.tsv"))
+
+#removing 2 columns 
+update_data <- update_data[,-which(names(update_data) == "X")]
+update_data <- update_data[,-which(names(update_data) == "X.1")]
+
+# Write updates and annotated data frame to output file
+readr::write_tsv(update_data, file.path("AnalysisFolderNew",
+  results_dir,
+  "Symbol_IDs.tsv" 
+))
+
 
 

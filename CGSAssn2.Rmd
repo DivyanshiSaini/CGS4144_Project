@@ -166,9 +166,47 @@ readr::write_tsv(final_mapped_df, file.path("AnalysisFolderNew",
 
 
 
+#part 1
+
+#copy the data
+copydataframe_df <- final_mapped_df
+
+# remove the 2 columns
+copydataframe_df <- copydataframe_df[, -which(names(copydataframe_df) == "Ensembl")]
+copydataframe_df <- copydataframe_df[, -which(names(copydataframe_df) == "all_symbol_IDs")]
 
 
+#load the library
+library(dplyr)
 
+# Specify the columns to log scale
+columns_to_log_scale <- names(copydataframe_df)[2:ncol(copydataframe_df)]
+
+# Log scale the selected columns
+log_scaled <- copydataframe_df %>%
+  mutate(across(all_of(columns_to_log_scale), ~log(. + 1), .names = "log_{.col}"))
+
+
+# Calculate per-gene median expression ranges
+gene_median_ranges <- apply(log_scaled[, -1], 2, function(x) diff(range(x)))
+
+
+# Install and load ggplot2 
+# install.packages("ggplot2")
+library(ggplot2)
+
+
+# Create a density plot of median expression ranges
+ggplot(data = data.frame(Median_Range = gene_median_ranges), aes(x = Median_Range)) +
+  geom_density(fill = "blue", alpha = 0.7) +
+  labs(title = "Density Plot of Median Expression Ranges",
+       x = "Median Expression Range",
+       y = "Density")
+
+
+# Check the dimensions of the expression matrix
+matrix_size <- dim(copydataframe_df)
+num_genes <- matrix_size[2]  # Number of columns represents the number of genes
 
 
 

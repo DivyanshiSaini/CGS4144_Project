@@ -1,0 +1,157 @@
+# Create a data frame with the provided data
+extracted_data_table <- data.frame(
+  Ensembl_ID = c(
+    "ENSBTAG00000046980",
+    "ENSBTAG00000038064",
+    "ENSBTAG00000034077",
+    "ENSBTAG00000031458",
+    "ENSBTAG00000027134",
+    "ENSBTAG00000023309",
+    "ENSBTAG00000001801"
+  ),
+  Gene = c(
+    "KLRF2",
+    "LOC539009",
+    "ASIP",
+    "NA",
+    "DYNC1I1",
+    "LOC100337390",
+    "SYT4"
+  ),
+  baseMean = c(
+    0.3785047,
+    0.4065421,
+    0.635514,
+    0.3831776,
+    0.5607477,
+    0.6682243,
+    0.5794393
+  ),
+  log2FoldChange = c(
+    3.193135,
+    -2.104813,
+    1.677019,
+    -2.210563,
+    -1.301538,
+    1.335396,
+    1.348604
+  ),
+  lfcSE = c(
+    0.611163,
+    0.4110983,
+    0.3251898,
+    0.4370331,
+    0.3130172,
+    0.3055562,
+    0.3292765
+  ),
+  pvalue = c(
+    "3.10E-08",
+    "7.35E-08",
+    "1.29E-09",
+    "2.57E-07",
+    "6.98E-07",
+    "1.55E-07",
+    "7.80E-07"
+  ),
+  padj = c(
+    "2.57E-04",
+    "4.06E-04",
+    "2.14E-05",
+    "8.52E-04",
+    "1.85E-03",
+    "6.42E-04",
+    "1.85E-03"
+  )
+)
+extracted_data_table_df <- update_data[1,]
+extracted_data_table_df <- rbind(extracted_data_table_df,update_data[1, ])
+extracted_data_table_df <- rbind(extracted_data_table_df,update_data[19846, ])
+extracted_data_table_df <- rbind(extracted_data_table_df,update_data[16437, ])
+extracted_data_table_df <- rbind(extracted_data_table_df,update_data[15832, ])
+extracted_data_table_df <- rbind(extracted_data_table_df,update_data[14505, ])
+extracted_data_table_df <- rbind(extracted_data_table_df,update_data[13875, ])
+extracted_data_table_df <- rbind(extracted_data_table_df,update_data[1143, ])
+
+#transpose 
+extracted_data_table_df <- t(extracted_data_table_df)
+
+
+if (!("pheatmap" %in% installed.packages())) {
+  # Install pheatmap
+  install.packages("pheatmap", update = FALSE)
+}
+
+if (!("DESeq2" %in% installed.packages())) {
+  # Install DESeq2
+  BiocManager::install("DESeq2", update = FALSE)
+}
+
+
+# Attach the `pheatmap` library
+library(pheatmap)
+
+# Attach the `DESeq2` library
+library(DESeq2)
+
+# We will need this so we can use the pipe: %>%
+library(magrittr)
+
+# Set the seed so our results are reproducible:
+set.seed(12345)
+
+
+# Read in metadata TSV file
+metadata <- readr::read_tsv(metadata_file)
+
+# Read in data TSV file
+expression_df <- readr::read_tsv(data_file) %>%
+  # Here we are going to store the gene IDs as row names so that
+  # we can have only numeric values to perform calculations on later
+  tibble::column_to_rownames("Gene")
+  
+head(metadata)
+
+# Make the data in the order of the metadata
+expression_df <- expression_df %>%
+  dplyr::select(metadata$refinebio_accession_code)
+
+# Check if this is in the same order
+all.equal(colnames(expression_df), metadata$refinebio_accession_code)
+
+# Calculate the variance for each gene
+variances <- apply(df, 1, var)
+
+# Determine the upper quartile variance cutoff value
+upper_var <- quantile(variances, 0.75)
+
+# Filter the data choosing only genes whose variances are in the upper quartile
+df_by_var <- data.frame(df) %>%
+  dplyr::filter(variances > upper_var)
+  
+# Create and store the heatmap object
+heatmap <- pheatmap(
+  df_by_var,
+  cluster_rows = TRUE, # Cluster the rows of the heatmap (genes in this case)
+  cluster_cols = TRUE, # Cluster the columns of the heatmap (samples)
+  show_rownames = FALSE, # There are too many genes to clearly show the labels
+  main = "Non-Annotated Heatmap",
+  colorRampPalette(c(
+    "deepskyblue",
+    "black",
+    "yellow"
+  ))(25),
+  scale = "row" # Scale values in the direction of genes (rows)
+)
+
+# Open a PNG file
+png(file.path(
+  plots_dir,
+  "GSE24862_heatmap_non_annotated.png" # Replace with a relevant file name
+))
+
+# Print your heatmap
+heatmap
+
+# Close the PNG file:
+dev.off()

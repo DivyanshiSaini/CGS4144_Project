@@ -1,3 +1,46 @@
+#part 1 getting the most variable genes
+
+
+# Calculate the coefficient of variation (CV) for each gene
+# CV = (Standard Deviation / Mean) * 100
+cv_values <- apply(df, 1, function(x) {
+  cv <- (sd(x) / mean(x)) * 100
+  return(cv)
+})
+
+# Create a new data frame with gene names and CV values
+gene_cv_df <- data.frame(Gene = rownames(df), CV = cv_values)
+
+# Sort the genes by CV in descending order
+sorted_genes <- gene_cv_df[order(gene_cv_df$CV, decreasing = TRUE), ]
+
+# Get the top N most variable genes
+N <- 5000  # Adjust N to the number of genes you want to select
+top_variable_genes <- head(sorted_genes, N)
+
+N <- 10  # Adjust N to the number of genes you want to select
+N_10 <- head(sorted_genes, N)
+
+N <- 100  # Adjust N to the number of genes you want to select
+N_100 <- head(sorted_genes, N)
+
+N <- 1000  # Adjust N to the number of genes you want to select
+N_1000 <- head(sorted_genes, N)
+
+N <- 10000  # Adjust N to the number of genes you want to select
+N_10000 <- head(sorted_genes, N)
+
+# Display the top variable genes
+print(top_variable_genes)
+
+copy_t_v_g <- top_variable_genes
+copy_t_v_g <- subset(copy_t_v_g, select=-1)
+
+copy_n10 <- subset(N_10, select=-1)
+copy_n100 <- subset(N_100, select=-1)
+copy_n1000 <- subset(N_1000, select=-1)
+copy_n10000 <- subset(N_10000, select=-1)
+
 
 # K_Mean 
 
@@ -23,3 +66,16 @@ print(kmeans_result$centers)
 # Print cluster assignments for each sample
 print(kmeans_result$cluster)
 
+
+
+# Specify the number of clusters (k)
+k <- 3 # You can change this to any desired number of clusters
+
+# Perform k-means clustering
+kmeans_result1 <- kmeans(copy_n10000, centers = k, nstart = 3)  # nstart controls the number of initial random configurations
+colors <- c("red", "green", "blue")  # Add more colors if you have more clusters
+plot(copy_n10000[, 1], col = colors[kmeans_result$cluster], pch = 16, 
+    main = "K-means Clustering")
+legend("topright", legend = 1:k, col = 1:k, pch = 3, title = "Clusters")
+print(kmeans_result$centers)
+print(kmeans_result$cluster)

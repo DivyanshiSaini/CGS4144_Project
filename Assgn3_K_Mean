@@ -1,0 +1,25 @@
+
+# K_Mean 
+
+# Specify the number of clusters (k)
+k <- 3 # You can change this to any desired number of clusters
+
+# Perform k-means clustering
+kmeans_result <- kmeans(copy_t_v_g, centers = k, nstart = 25)  # nstart controls the number of initial random configurations
+
+# Create a color palette for the clusters
+colors <- c("red", "green", "blue")  # Add more colors if you have more clusters
+
+# Plot the data points with cluster assignments
+plot(copy_t_v_g[, 1], col = colors[kmeans_result$cluster], pch = 16, 
+     xlab = "X-Axis Label", ylab = "Y-Axis Label", main = "K-means Clustering")
+
+# Add legend to the plot
+legend("topright", legend = 1:k, col = 1:k, pch = 3, title = "Clusters")
+
+# Print cluster centers
+print(kmeans_result$centers)
+
+# Print cluster assignments for each sample
+print(kmeans_result$cluster)
+

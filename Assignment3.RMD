@@ -1,0 +1,24 @@
+#part 1 getting the most variable genes
+
+
+# Calculate the coefficient of variation (CV) for each gene
+# CV = (Standard Deviation / Mean) * 100
+cv_values <- apply(df, 1, function(x) {
+  cv <- (sd(x) / mean(x)) * 100
+  return(cv)
+})
+
+# Create a new data frame with gene names and CV values
+gene_cv_df <- data.frame(Gene = rownames(df), CV = cv_values)
+
+# Sort the genes by CV in descending order
+sorted_genes <- gene_cv_df[order(gene_cv_df$CV, decreasing = TRUE), ]
+
+# Get the top N most variable genes
+N <- 5000  # Adjust N to the number of genes you want to select
+top_variable_genes <- head(sorted_genes, N)
+
+# Display the top variable genes
+print(top_variable_genes)
+
+

@@ -1,0 +1,29 @@
+#Assign 3
+new_hugo <- update_data
+unique_rows <- !duplicated(new_hugo[, 1])
+
+# Subset the matrix to keep only the rows with unique values in the specified column
+result_hugo <- new_hugo[unique_rows, ]
+result_hugo <- result_hugo[complete.cases(result_hugo),]
+
+
+# Extract the first row and set it as column names
+temp <- result_hugo
+colnames(temp) <- temp[1, ]
+# Remove the first row (as it's now used as column names)
+temp <- temp[-1, ]
+
+
+# Calculate the variance of each gene in the matrix (ignoring NAs)
+gene_var <- apply(temp, 1, var, na.rm = TRUE)
+# Sort genes based on variance in descending order
+sorted_genes <- order(gene_var, decreasing = TRUE)
+# Subset the matrix to include only the top 5,000 most variable genes
+top_5000_genes <- temp[sorted_genes[1:5000], ]
+
+
+# Extract the first column and set it as row names
+rownames(top_5000_genes) <- top_5000_genes[, 1]
+# Remove the first column (as it's now used as row names)
+top_5000_genes <- top_5000_genes[, -1]
+

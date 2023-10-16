@@ -1,4 +1,22 @@
 #Assign 3
+# Base Data Set 
+# updates
+update_data <- read.delim(file.path("AnalysisFolderNew",
+  results_dir,"Symbol_IDs.tsv"))
+
+#removing 2 coulmns 
+update_data <- update_data[,-which(names(update_data) == "X")]
+update_data <- update_data[,-which(names(update_data) == "X.1")]
+
+# Write updates and annotated data frame to output file
+readr::write_tsv(update_data, file.path("AnalysisFolderNew",
+  results_dir,
+  "Symbol_IDs.tsv" 
+))
+
+
+
+#New Data Set
 new_hugo <- update_data
 unique_rows <- !duplicated(new_hugo[, 1])
 

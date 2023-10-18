@@ -1,81 +1,167 @@
-#part 1 getting the most variable genes
+
+# Transpose the matrix
+transposed_genes <- t(top_5000_genes)
+top_5000 <- transposed_genes
 
 
-# Calculate the coefficient of variation (CV) for each gene
-# CV = (Standard Deviation / Mean) * 100
-cv_values <- apply(df, 1, function(x) {
-  cv <- (sd(x) / mean(x)) * 100
-  return(cv)
-})
+#Convert the matrix to numeric (if it's not already)
+top_5000 <- as.matrix(top_5000)
 
-# Create a new data frame with gene names and CV values
-gene_cv_df <- data.frame(Gene = rownames(df), CV = cv_values)
-
-# Sort the genes by CV in descending order
-sorted_genes <- gene_cv_df[order(gene_cv_df$CV, decreasing = TRUE), ]
-
-# Get the top N most variable genes
-N <- 5000  # Adjust N to the number of genes you want to select
-top_variable_genes <- head(sorted_genes, N)
-
-N <- 10  # Adjust N to the number of genes you want to select
-N_10 <- head(sorted_genes, N)
-
-N <- 100  # Adjust N to the number of genes you want to select
-N_100 <- head(sorted_genes, N)
-
-N <- 1000  # Adjust N to the number of genes you want to select
-N_1000 <- head(sorted_genes, N)
-
-N <- 10000  # Adjust N to the number of genes you want to select
-N_10000 <- head(sorted_genes, N)
-
-# Display the top variable genes
-print(top_variable_genes)
-
-copy_t_v_g <- top_variable_genes
-copy_t_v_g <- subset(copy_t_v_g, select=-1)
-
-copy_n10 <- subset(N_10, select=-1)
-copy_n100 <- subset(N_100, select=-1)
-copy_n1000 <- subset(N_1000, select=-1)
-copy_n10000 <- subset(N_10000, select=-1)
+# Check if there are any non-numeric values in the matrix
+if (!all(is.numeric(top_5000))) {
+  # If there are non-numeric values, convert them to numeric (assuming they are convertible)
+  top_5000 <- apply(top_5000, 2, as.numeric)
+}
 
 
-# K_Mean 
 
-# Specify the number of clusters (k)
-k <- 3 # You can change this to any desired number of clusters
+#print(top_5000_genes[1:5,1:5])
+#table(sapply(top_5000_genes, class))
+
+# Perform PCA for dimensionality reduction (assuming top_5000_genes is your data matrix)
+pca_result <- prcomp(top_5000)
+
+# Extract the first two principal components
+pc1 <- pca_result$x[, 1]
+pc2 <- pca_result$x[, 2]
+
+# Determine the optimal number of clusters (you can use methods like the elbow method or silhouette analysis)
+# For example, let's assume you choose k=3 clusters
+k <- 7
 
 # Perform k-means clustering
-kmeans_result <- kmeans(copy_t_v_g, centers = k, nstart = 25)  # nstart controls the number of initial random configurations
+kmeans_result <- kmeans(transposed_genes, centers = k)
 
-# Create a color palette for the clusters
-colors <- c("red", "green", "blue")  # Add more colors if you have more clusters
+# Create a data frame with PCA results and cluster assignments
+pca_data <- data.frame(PC1 = pc1, PC2 = pc2, Cluster = as.factor(kmeans_result$cluster))
 
-# Plot the data points with cluster assignments
-plot(copy_t_v_g[, 1], col = colors[kmeans_result$cluster], pch = 16, 
-     xlab = "X-Axis Label", ylab = "Y-Axis Label", main = "K-means Clustering")
+print (pca_data)
+# Load necessary libraries
+library(ggplot2)
 
-# Add legend to the plot
-legend("topright", legend = 1:k, col = 1:k, pch = 3, title = "Clusters")
-
-# Print cluster centers
-print(kmeans_result$centers)
-
-# Print cluster assignments for each sample
-print(kmeans_result$cluster)
+# Create a scatter plot with color representing clusters
+ggplot(pca_data, aes(x = PC1, y = PC2, color = Cluster)) +
+  geom_point(size = 2) +
+  labs(x = "Principal Component 1", y = "Principal Component 2", title = "K-means Clustering for top 5000 Genes (PCA)") +
+  theme_minimal()
 
 
 
-# Specify the number of clusters (k)
-k <- 3 # You can change this to any desired number of clusters
+
+#removing the  numbers 
+#cluster
+
+tnpose_type <-  t(update_data)
+tnpose_type <- tnpose_type[-1,]
+
+# keep only 1 column
+cond_type <- tnpose_type[,1]
+
+cond_type <- t(cond_type)
+
+# Remove numbers from the "Column1" using gsub
+cond_type[,1] <- gsub("[0-9]", "", cond_type[,1])
+
+# Remove dots from the values in the first column
+cond_type[,1]  <- gsub("\\.", "", cond_type[,1])
+
+
+
+
+
+
+#alluvial plot
+
+
+#load
+library(dplyr)
+
+clusters <- pca_data$Cluster
+
+# Create a data frame with the cluster column
+alluvial_data <- data.frame(Variable = cond_type[, 1],Cluster = clusters)
+
+
+# Group and summarize the data
+alv_sum <- alluvial_data %>%
+  group_by(Variable, Cluster) %>%
+  summarise(Count = n()) %>%
+  arrange(Variable, Cluster)
+
+install.packages("ggalluvial")
+#load
+library(ggalluvial)
+
+#plot
+plot <-ggplot(alv_sum,
+       aes(axis1 = Cluster, axis2 = Variable, y = Count)) +
+  geom_alluvium(aes(fill = Cluster)) +
+  geom_stratum() +
+  geom_text(stat = "stratum", aes(label = after_stat(stratum))) +
+  scale_x_continuous(expand = c(0.15, 0.05)) +
+  labs(title = "Alluvial Diagram on the K-Mean Clustering") +
+  theme_minimal()
+  
+#print
+print(plot)
+
+
+
+#HeatMap_For_KMean_Clustering
+
+install.packages("gplots")
+library(gplots)
+
+install.packages("ComplexHeatmap")
+library(ComplexHeatmap)
+
+
+# Assuming 'top_5000' is your data matrix
+# Perform PCA for dimensionality reduction (assuming top_5000_genes is your data matrix)
+pca_result <- prcomp(top_5000)
+
+# Extract the first two principal components
+pc1 <- pca_result$x[, 1]
+pc2 <- pca_result$x[, 2]
+
+
+# Determine the optimal number of clusters (you can use methods like the elbow method or silhouette analysis)
+# For example, let's assume you choose k=4 clusters
+k <- 4
 
 # Perform k-means clustering
-kmeans_result1 <- kmeans(copy_n10000, centers = k, nstart = 3)  # nstart controls the number of initial random configurations
-colors <- c("red", "green", "blue")  # Add more colors if you have more clusters
-plot(copy_n10000[, 1], col = colors[kmeans_result$cluster], pch = 16, 
-    main = "K-means Clustering")
-legend("topright", legend = 1:k, col = 1:k, pch = 3, title = "Clusters")
-print(kmeans_result$centers)
-print(kmeans_result$cluster)
+kmeans_result <- kmeans(top_5000, centers = k)
+
+# Create a data frame with PCA results and cluster assignments
+pca_data <- data.frame(PC1 = pc1, PC2 = pc2, Cluster = as.factor(kmeans_result$cluster))
+
+# Create a heatmap with an annotated k-means side bar using ComplexHeatmap
+Heatmap(t(top_5000), name = "Expression", col = circlize::colorRamp2(c(-2, 0, 2), c("blue", "white", "red")),
+        show_row_names = FALSE,
+        cluster_rows = TRUE,
+        cluster_columns = TRUE,
+        top_annotation = HeatmapAnnotation(df = data.frame(Cluster = kmeans_result$cluster), 
+                                          col = list(Cluster = c("1" = "blue", "2" = "green", "3" = "orange", "4" = "red")), 
+                                          show_legend = TRUE),
+        bottom_annotation = HeatmapAnnotation(PCA1 = pca_data$PC1, PCA2 = pca_data$PC2, 
+                                             col = list(PCA1 = circlize::colorRamp2(c(-2, 0, 2), c("blue", "white", "red")),
+                                                        PCA2 = circlize::colorRamp2(c(-2, 0, 2), c("blue", "white", "red")))))
+                                                        
+                                                        
+                                                        
+
+# Chi-Square Testing 
+cl_data <- data.frame(
+  Cluster = c(1, 2, 3, 4, 2, 3, 4, 1, 2, 3, 4, 2, 3),
+  Count = c(2, 17, 15, 32, 9, 37, 3, 1, 8, 37, 8, 19, 26)
+)
+
+# Create a frequency table
+freq_table <- table(cl_data$Cluster)
+
+# Perform chi-squared test
+chi_squared_result <- chisq.test(freq_table)
+print(chi_squared_result)
+
+#Statistically Adjusted 
+

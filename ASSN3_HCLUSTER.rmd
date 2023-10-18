@@ -1,0 +1,283 @@
+
+#Assign 3
+# Base Data Set 
+# updates
+update_data <- read.delim(file.path("AnalysisFolderNew",
+  results_dir,"Symbol_IDs.tsv"))
+
+#load
+# Load the magrittr package
+library(magrittr)
+# Load the dplyr package
+library(dplyr)
+# Load the tibble package
+library(tibble)
+
+
+
+
+#New Data Set
+new_hugo <- update_data
+unique_rows <- !duplicated(new_hugo[, 1])
+
+# Subset the matrix to keep only the rows with unique values in the specified column
+result_hugo <- new_hugo[unique_rows, ]
+result_hugo <- result_hugo[complete.cases(result_hugo),]
+
+
+# Extract the first row and set it as column names
+temp <- result_hugo
+colnames(temp) <- temp[1, ]
+# Remove the first row (as it's now used as column names)
+temp <- temp[-1, ]
+
+# Duplicate the first column into a new column
+copy_df$NewColumn <- copy_df[, 1]
+
+
+
+# Calculate the variance of each gene in the matrix (ignoring NAs)
+gene_var <- apply(temp, 1, var, na.rm = TRUE)
+# Sort genes based on variance in descending order
+sorted_genes <- order(gene_var, decreasing = TRUE)
+
+
+# Subset the matrix to include only the top 5,000 most variable genes
+top_5000_genes <- temp[sorted_genes[1:10000], ]
+
+
+
+# Extract the first column and set it as row names
+rownames(top_5000_genes) <- top_5000_genes[, 1]
+# Remove the first column (as it's now used as row names)
+top_5000_genes <- top_5000_genes[, -1]
+
+
+# Transpose the data frame using t()
+transposed_df <- t(top_5000_genes)
+
+#transpose copy
+copy_df <- transposed_df
+
+# Keep only the first 5,000 columns
+copy_df <- copy_df[, 1:5000]
+
+#code to add condition column
+
+# Create a new data frame and copy row names as a new column
+new_df <- data.frame(Condition = rownames(copy_df))
+
+
+
+
+# Combine them column-wise
+combined_df <- cbind(copy_df, new_df)
+
+#copy combined
+cc_df <- combined_df
+
+#copy again
+ccop_df <- cc_df
+
+# Get the names of the data frame's columns
+col_names <- names(cc_df)
+
+
+
+# Replace column names with values from the first column
+rownames(ccop_df) <- ccop_df$Condition
+
+# Remove the first column
+ccop_df <- ccop_df[-1]
+
+
+
+
+# Identify the last column and remove it from the list of column names
+last_col_name <- col_names[length(col_names)]
+col_names <- col_names[-length(col_names)]
+
+# Reorder the column names to move the last column to the first position
+new_col_order <- c(last_col_name, col_names)
+
+# Reorder the data frame's columns based on the new order
+cc_df <- cc_df[new_col_order]
+
+
+
+
+#cluster
+
+# Remove numbers from the "Column1" using gsub
+new_df$Condition <- gsub("[0-9]", "", new_df$Condition)
+
+# Remove dots from the values in the first column
+new_df$Condition <- gsub("\\.", "", new_df$Condition)
+
+#load library
+library(ConsensusClusterPlus)
+
+
+#n
+c_df <-copy_df
+
+#nonnumeric check
+if(!all(is.numeric(c_df))){
+c_df <- apply(c_df, 2, as.numeric)
+}
+
+# Keep only the first 5,000 columns
+c_df <- c_df[, 1:5000]
+
+# Calculate a distance matrix from your gene expression data
+dist_matrix <- dist(c_df)
+
+#hclustering
+hclustering <- hclust(dist_matrix, method = "ward.D")
+
+
+
+#cut
+clusters <- cutree(hclustering, k = 4)
+
+#color
+cluster_colors <-heat.colors(k)
+
+# Cluster
+plot(hclustering, main = "Hierarchical Clustering Dendrogram with Clusters with 5000 variable genes")
+rect.hclust(hclustering, k = 4, border = cluster_colors)  # Change 'k' to match the number of clusters
+
+
+
+
+#alluvial plot
+
+
+#load
+library(dplyr)
+
+# Create a data frame
+df <- data.frame(Variable = new_df[, 1], Cluster = clusters)
+
+
+# Group and summarize the data
+df_summary <- df %>%
+  group_by(Variable, Cluster) %>%
+  summarise(Count = n()) %>%
+  arrange(Variable, Cluster)
+
+#load
+library(ggalluvial)
+
+#plot
+plot <-ggplot(df_summary,
+       aes(axis1 = Cluster, axis2 = Variable, y = Count)) +
+  geom_alluvium(aes(fill = Cluster)) +
+  geom_stratum() +
+  geom_text(stat = "stratum", aes(label = after_stat(stratum))) +
+  scale_x_continuous(expand = c(0.15, 0.05)) +
+  labs(title = "Alluvial Diagram Based on Hierarchical Clustering") +
+  theme_minimal()
+  
+
+
+
+#print
+print(plot)
+
+
+
+#heat map
+
+
+
+# Attach the `pheatmap` library
+library(pheatmap)
+
+
+  
+#copy
+c_df <- copy_df
+
+
+# Check the data types of the columns
+str(c_df)
+
+
+
+
+#nonnumeric check
+if(!all(is.numeric(c_df))){
+c_df <- apply(c_df, 2, as.numeric)
+}
+
+
+# Create a heatmap
+heatmap(c_df)
+
+
+# Load required libraries
+library(gplots)
+library(gplots)
+library(RColorBrewer)
+
+#check non numeric
+non_numeric_columns <- sapply(c_df, function(x) !is.numeric(x))
+non_numeric_columns
+
+
+# Convert the first column of c_df to numeric if it's convertible
+c_df[, 1] <- as.numeric(c_df[, 1])
+
+#labels
+cluster_labels <- as.character(cutree(hclustering, k = 4))  # Replace 'n' with the desired number of clusters
+
+
+
+
+#HEATMAP        
+heatmap.2(c_df,
+          main = "Heatmap for HClustering",
+          Rowv = as.dendrogram(hclustering),  # Use hierarchical clustering for rows
+          Colv = as.dendrogram(hclustering),  # No column clustering
+          dendrogram = "both",  # Show the row dendrogram
+          key = TRUE,  # Show a color key
+          symkey = FALSE,  # Don't show symmetric key
+          trace = "none",  # Don't print trace
+          RowSideColors = cluster_labels,  # Color rows by clusters
+          ylab = "Samples",
+          xlab = "Genes",
+          col = colorRampPalette(c("yellow", "white", "blue", "orange"))(50))  # Define the heatmap color palette
+         
+
+
+
+
+
+#Stats
+
+#create a data frame of cluster and counts
+data <- data.frame(
+  Cluster = c(1,2,3,4,1,2,4,2,3,4,2,4),
+  Count = c(32,30,2,2,3,9,37,39,1,14,20,25)
+)
+
+
+#chi
+# Perform a chi-squared test
+chisq_result <- chisq.test(data)
+
+# Print the chi-squared test result
+print(chisq_result)
+
+        
+# Example raw p-values from multiple statistical tests
+raw_pvalues <- c(0.00000142, 0.8384, )
+
+# Adjust the p-values using the Benjamini-Hochberg (BH) method for controlling false discovery rate (FDR)
+adjusted_pvalues <- p.adjust(raw_pvalues, method = "BH")
+
+# Print the adjusted p-values
+print(adjusted_pvalues)
+
+        

@@ -1,0 +1,58 @@
+install.packages("cluster")
+library(cluster)
+
+k <- 4  # Change this to the number of clusters you want
+
+# Perform PAM clustering
+pam_rslt <- pam(top_5000, k)
+
+# Print the clustering results
+print(pam_result)
+
+clst <- pam_result$clustering
+
+clst <- t(clst)
+clst_col <- alluvial_data$Variable
+
+# Create a data frame with the cluster column
+pam_alluvial_data <- data.frame(Variable = cond_type[, 1],Cluster = clst)
+
+# Group and summarize the data
+pam_alv_sum <- pam_alluvial_data %>%
+  group_by(Variable, Cluster) %>%
+  summarise(Count = n()) %>%
+  arrange(Variable, Cluster)
+
+install.packages("ggalluvial")
+#load
+library(ggalluvial)
+
+#plot
+plot <-ggplot(pam_alv_sum,
+       aes(axis1 = Cluster, axis2 = Variable, y = Count)) +
+  geom_alluvium(aes(fill = Cluster)) +
+  geom_stratum() +
+  geom_text(stat = "stratum", aes(label = after_stat(stratum))) +
+  scale_x_continuous(expand = c(0.15, 0.05)) +
+  labs(title = "Alluvial Diagram on PAM Clustering") +
+  theme_minimal()
+  
+#print
+print(plot)
+
+
+# Chi-Square Testing 
+cl_data <- data.frame(
+  Cluster = c(1, 2, 3, 4, 2, 3, 4, 1, 2, 3, 4, 2, 3),
+  Count = c(2, 17, 15, 32, 9, 37, 3, 1, 8, 37, 8, 19, 26)
+)
+
+# Create a frequency table
+freq_table <- table(cl_data$Cluster)
+
+# Perform chi-squared test
+chi_squared_result <- chisq.test(freq_table)
+print(chi_squared_result)
+
+
+heatmap(t(top_5000), Rowv=NA, Colv=NA)

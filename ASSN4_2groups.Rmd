@@ -1,0 +1,3 @@
+#extract for 2 groups -> high and low
+# Use sub to extract the words between underscores and replace the original column
+data_df$Condition <- sub(".*?_(.*?)_.*", "\\1", data_df$Condition)

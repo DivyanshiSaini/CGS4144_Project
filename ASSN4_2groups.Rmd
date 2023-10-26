@@ -1,3 +1,6 @@
 #extract for 2 groups -> high and low
 # Use sub to extract the words between underscores and replace the original column
 data_df$Condition <- sub(".*?_(.*?)_.*", "\\1", data_df$Condition)
+
+# Convert "high energy diet" to 1 and "low energy diet" to 0
+data_df$Condition <- ifelse(data_df$Condition == "high energy diet", 1, 0)

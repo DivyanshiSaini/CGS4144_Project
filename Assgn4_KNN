@@ -1,0 +1,90 @@
+#subset
+#extract for 2 groups -> high and low
+# Use sub to extract the words between underscores and replace the original column
+#code to add condition column
+
+# Create a new data frame and copy row names as a new column
+new_df <- data.frame(Condition = rownames(transposed_genes))
+
+# Combine them column-wise
+combined_df <- cbind(new_df,transposed_genes)
+
+combined_df$Condition <- sub(".*?_(.*?)_.*", "\\1", combined_df$Condition)
+gene_subset_data <- combined_df
+
+# Convert "high energy diet" to 1 and "low energy diet" to 0
+gene_subset_data$Condition <- ifelse(gene_subset_data$Condition == "high energy diet", 1, 0)
+
+
+
+install.packages("FNN")
+library(FNN)
+
+# Assuming 'data' is your data frame
+# Extract features (gene expression data) and labels (condition_group)
+features <- gene_subset_data[, -(1:1)]  # Exclude SampleID and condition_group columns
+labels <- gene_subset_data$Condition
+
+print(dim(features))
+print(length(labels))
+
+# Run KNN with k=3 (you can adjust the value of k as needed)
+k <- 3
+knn_result <- knn(train = features, test = features, cl = labels, k = k, prob = TRUE)
+
+# Get the nearest neighbor indices and class probabilities
+nearest_neighbor_indices <- knn_result
+class_probabilities <- attr(knn_result, "prob")
+
+# Calculate distances between points
+distances <- dist(features)
+
+# Print the results
+print("Nearest Neighbor Indices:")
+print(nearest_neighbor_indices)
+
+
+
+print("Distances between Points:")
+print(as.matrix(distances))
+
+
+print("Class Probabilities:")
+print(class_probabilities)
+
+
+
+
+
+# Run KNN with k=3 (you can adjust the value of k as needed)
+k <- 3
+knn_model <- knn(train = features, test = features, cl = labels, k = k)
+
+# Print or use the predicted labels as needed
+print("Predicted Labels:")
+print(knn_model)
+
+
+
+
+
+
+
+
+# Predict classes for the entire dataset
+predicted_labels <- knn_model
+
+print(length(labels))
+
+
+# Assess accuracy
+accuracy <- sum(predicted_labels == labels) / length(labels)
+
+# Print confusion matrix
+confusion_matrix <- table(predicted_labels, labels)
+print("Confusion Matrix:")
+print(confusion_matrix)
+
+# Print accuracy
+print("Accuracy:")
+print(accuracy)

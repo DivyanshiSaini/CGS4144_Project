@@ -1,0 +1,79 @@
+# Remove numbers from the "Column1" using gsub
+cc_df$Condition <- gsub("[0-9]", "", cc_df$Condition)
+
+# Remove dots from the values in the first column
+cc_df$Condition <- gsub("\\.", "", cc_df$Condition)
+
+#make
+data_df <- cc_df
+
+
+#extract for 2 groups -> high and low
+# Use sub to extract the words between underscores and replace the original column
+data_df$Condition <- sub(".*?_(.*?)_.*", "\\1", data_df$Condition)
+
+
+
+#nonnumeric check
+if(!all(is.numeric(data_df))){
+data_df <- apply(data_df, 2, as.numeric)
+}
+
+# Convert "high energy diet" to 1 and "low energy diet" to 0
+data_df$Condition <- ifelse(data_df$Condition == "high energy diet", 1, 0)
+
+
+# Load your data, assuming it's in a data frame called 'gene_data'
+install.packages("randomForest")
+
+
+# Set the seed for reproducibility
+set.seed(123)
+
+# Create a random index for splitting the data
+split_index <- sample(1:nrow(data_df), 0.7 * nrow(data_df))
+
+# Create the training and testing data subsets
+training_data <- data_df[split_index, ]
+testing_data <- data_df[-split_index, ]
+
+# Load the randomForest library
+library(randomForest)
+
+# Create a Random Forest model for classification
+clf <- randomForest(Condition ~ ., data = training_data, ntree = 100)
+
+# Make predictions on the testing data
+predictions <- predict(clf, newdata = testing_data)
+
+# Evaluate the model's performance
+# You can calculate performance metrics (e.g., accuracy) as needed
+# Assuming 'predictions' contains the predicted values and 'testing_data' has the actual values
+actual_values <- testing_data$Condition
+
+# Calculate accuracy
+accuracy <- sum(predictions == actual_values) / length(actual_values)
+
+# Print the accuracy
+cat("Random Forest Accuracy:", accuracy, "\n")
+
+
+
+install.packages("e1071")  # Install the e1071 package
+library(e1071)  # Load the e1071 package
+
+# Create a Naive Bayes model
+nb_model <- naiveBayes(Condition ~ ., data = training_data)
+
+nb_predictions <- predict(nb_model, newdata = testing_data)
+
+
+# Assuming 'nb_predictions' contains the predicted values
+actual_values <- testing_data$Condition
+
+# Calculate accuracy
+nb_accuracy <- sum(nb_predictions == actual_values) / length(actual_values)
+
+# Print the accuracy
+cat("Naive Bayes Accuracy:", nb_accuracy, "\n")
+

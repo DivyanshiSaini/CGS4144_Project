@@ -1,0 +1,106 @@
+# Load your data, assuming it's in a data frame called 'gene_data'
+install.packages("randomForest")
+
+
+
+
+#copy data set
+GenesCopy_df <- data_df
+#change for num genes
+# Keep only 5000 genes
+GenesCopy_df <- GenesCopy_df[, 1:10001]
+
+
+# Remove dashes and semicolons from column names
+colnames(GenesCopy_df) <- sub("[-;]", "", colnames(GenesCopy_df))
+
+# Remove all semicolons from column names
+colnames(GenesCopy_df) <- gsub(";", "", colnames(GenesCopy_df))
+
+# Remove all dashes from column names
+colnames(GenesCopy_df) <- gsub("-", "", colnames(GenesCopy_df))
+
+# Remove parentheses from column names
+colnames(GenesCopy_df) <- sub("\\([^\\)]+\\)", "", colnames(GenesCopy_df))
+
+# Set the seed for reproducibility
+set.seed(123)
+
+# Create a random index for splitting the data
+split_index <- sample(1:nrow(GenesCopy_df), 0.7 * nrow(GenesCopy_df))
+
+# Create the training and testing data subsets
+training_data <- GenesCopy_df[split_index, ]
+testing_data <- GenesCopy_df[-split_index, ]
+
+# Load the randomForest library
+library(randomForest)
+
+
+
+
+
+# Create a Random Forest model for classification
+clf <- randomForest(Condition ~ ., data = training_data)
+
+# Make predictions on the testing data
+predictions <- predict(clf, newdata = testing_data)
+
+# Convert a vector to a data frame
+testing_data <- as.data.frame(testing_data)
+
+
+
+# Evaluate the model's performance
+# You can calculate performance metrics (e.g., accuracy) as needed
+# Assuming 'predictions' contains the predicted values and 'testing_data' has the actual values
+actual_values <- testing_data$Condition
+
+# Calculate accuracy
+accuracy <- sum(predictions == actual_values) / length(actual_values)
+
+# Print the accuracy
+cat("Random Forest Accuracy:", accuracy, "\n")
+
+# Get variable importance scores
+var_importance <- importance(clf)
+
+# Extract variable importance scores
+importance_scores <- clf$importance
+
+# Set a threshold
+threshold <- 0.1
+
+# Select genes with importance scores above the threshold
+selected_genes <- rownames(importance_scores)[importance_scores[, 1] > threshold]
+
+# Make predictions with the Random Forest model and get predicted probabilities
+# Replace 'clf' with your actual Random Forest model
+clf_probs <- predict(clf, newdata = testing_data, type = "response")
+
+# Determine the number of genes in each signature
+group_0_genes <- selected_genes[predicted_probabilities[, "0"] > threshold]
+group_1_genes <- selected_genes[predicted_probabilities[, "1"] > threshold]
+
+
+
+# Count the number of genes in each signature
+num_genes_in_group_0 <- length(group_0_genes)
+num_genes_in_group_1 <- length(group_1_genes)
+
+# Calculate the overlap
+gene_overlap <- length(intersect(group_0_genes, group_1_genes))
+
+# Print the number of genes in each signature
+cat("Random Forest: Number of genes in Group 0 signature:", num_genes_in_group_0, "\n")
+cat("Random Forest: Number of genes in Group 1 signature:", num_genes_in_group_1, "\n")
+
+# Print the overlap between the signatures
+cat("Random Forest: Number of overlapping genes:", gene_overlap, "\n")
+
+
+
+
+
+
+

@@ -1,0 +1,78 @@
+
+
+#heatmap
+library(graphics)
+
+
+# load the required package
+library(gplots)
+
+#copy
+df <- data_df
+
+# Remove the first column from a data frame
+df <- df[, -1]  # The '-1' indicates the column to remove (in this case, the first column)
+
+
+# Subsetting the gene expression data to include only selected genes
+selected_gene_data <- df[ ,selected_genes]
+
+# Assuming data_df contains all genes, and you have two groups: Group0 and Group1
+selected_groups <- c("Low Energy Diet", "High Energy Diet")  # Replace with your actual group names
+
+# Create a new data frame with only the selected columns (genes)
+selected_gene_data <- df[, selected_groups]
+
+library(pheatmap)
+
+
+#heatmap
+
+# Remove rows with missing values
+df <- df[complete.cases(df), ]
+
+# Convert the data to numeric (if not already)
+selected_gene_data <- as.matrix(selected_gene_data)
+
+
+
+
+# Create a new data frame with only the first column
+conditions_df <- cc_df[, 1]
+conditions_df <- as.data.frame(conditions_df)
+
+#extract for 2 groups -> high and low
+# Use sub to extract the words between underscores and replace the original column
+conditions_df$conditions_df <- sub(".*?_(.*?)_.*", "\\1", conditions_df$conditions_df)
+
+# Create a custom color palette
+color_palette <- c("high energy" = "red", "low energy" = "blue")
+
+# Map the groupings in conditions_df to the corresponding colors
+colors <- ifelse(conditions_df$conditions_df == "high energy diet", "red", "blue")
+
+
+#transpose copy
+t_copy <- t(selected_gene_data)
+
+#heatmap
+heatmap(t_copy,
+main = "Heatmap with Selected Genes",  # Title
+ ylab = "Selected Genes",
+ xlab = "Samples",
+ColSideColors = colors,
+)
+
+
+# Define the legend for the annotation sidebar
+legend("topleft", legend = unique(conditions_df$conditions_df), fill = unique(colors), title = "Group Legend")
+
+
+
+#off
+dev.off()  # Close the current graphics device
+
+
+
+
+

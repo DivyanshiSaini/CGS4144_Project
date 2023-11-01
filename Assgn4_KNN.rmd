@@ -16,75 +16,82 @@ gene_subset_data <- combined_df
 gene_subset_data$Condition <- ifelse(gene_subset_data$Condition == "high energy diet", 1, 0)
 
 
+#RETRY
 
-install.packages("FNN")
-library(FNN)
+# Load required libraries
+install.packages("class") # Install 'class' package if not already installed
 
-# Assuming 'data' is your data frame
+library(class)
+
+
+# Check if there are any non-numeric values in the matrix
+if (!all(is.numeric(gene_subset_data))) {
+  # If there are non-numeric values, convert them to numeric (assuming they are convertible)
+  gene_subset_data <- apply(gene_subset_data, 2, as.numeric)
+}
+
 # Extract features (gene expression data) and labels (condition_group)
 features <- gene_subset_data[, -(1:1)]  # Exclude SampleID and condition_group columns
-labels <- gene_subset_data$Condition
+labels <- gene_subset_data[,(1:1)]
 
 print(dim(features))
 print(length(labels))
+print(labels)
 
-# Run KNN with k=3 (you can adjust the value of k as needed)
-k <- 3
-knn_result <- knn(train = features, test = features, cl = labels, k = k, prob = TRUE)
+# Split the data into training and testing sets (80% training, 20% testing)
+set.seed(123) # Set seed for reproducibility
+sample_size <- floor(0.8 * nrow(features))
+train_indices <- sample(1:nrow(features), sample_size)
+train_genes <- features[train_indices, ]
+test_genes <- features[-train_indices, ]
+train_target <- labels[train_indices]
+test_target <- labels[-train_indices]
 
-# Get the nearest neighbor indices and class probabilities
-nearest_neighbor_indices <- knn_result
-class_probabilities <- attr(knn_result, "prob")
-
-# Calculate distances between points
-distances <- dist(features)
-
-# Print the results
-print("Nearest Neighbor Indices:")
-print(nearest_neighbor_indices)
-
+# Train KNN model (you can choose an appropriate 'k' value)
+k <- 3 # Example: set k to 3
+knn_model <- knn(train = train_genes, test = test_genes, cl = train_target, k = k)
 
 
-print("Distances between Points:")
-print(as.matrix(distances))
-
-
-print("Class Probabilities:")
-print(class_probabilities)
-
-
-
-
-
-# Run KNN with k=3 (you can adjust the value of k as needed)
-k <- 3
-knn_model <- knn(train = features, test = features, cl = labels, k = k)
-
-# Print or use the predicted labels as needed
-print("Predicted Labels:")
-print(knn_model)
-
-
-
-
-
-
-
-
-# Predict classes for the entire dataset
-predicted_labels <- knn_model
-
-print(length(labels))
-
-
-# Assess accuracy
-accuracy <- sum(predicted_labels == labels) / length(labels)
-
-# Print confusion matrix
-confusion_matrix <- table(predicted_labels, labels)
-print("Confusion Matrix:")
-print(confusion_matrix)
+# Calculate accuracy
+accuracy <- sum(knn_model == test_target) / length(test_target)
 
 # Print accuracy
-print("Accuracy:")
-print(accuracy)
+print(paste("KNN Accuracy:", accuracy))
+
+#PART2F
+# Train KNN model (you can choose an appropriate 'k' value)
+k <- 3 # Example: set k to 3
+knn_model <- knn(train = train_genes, test = test_genes, cl = train_target, k = k)
+
+# Make predictions on the test data
+predictions <- knn_model
+
+# Determine the indices of samples classified as '0' and '1'
+class_0_indices <- which(predictions == 0)
+class_1_indices <- which(predictions == 1)
+
+# Extract gene signatures for class 0
+class_0_signature <- colnames(test_genes)[class_0_indices]
+num_genes_in_class_0_signature <- length(class_0_signature)
+
+# Extract gene signatures for class 1
+class_1_signature <- colnames(test_genes)[class_1_indices]
+num_genes_in_class_1_signature <- length(class_1_signature)
+
+# Calculate the overlap between signatures
+gene_overlap <- length(intersect(class_0_signature, class_1_signature))
+
+# Print the number of genes in each signature
+print(paste("KNN: Number of genes in Group 0 signature:", num_genes_in_class_0_signature))
+print(paste("KNN: Number of genes in Group 1 signature:", num_genes_in_class_1_signature))
+
+# Print the overlap between the signatures
+print(paste("KNN: Overlap between signatures:", gene_overlap))
+
+# Calculate accuracy
+accuracy <- sum(predictions == test_target) / length(test_target)
+
+# Print accuracy
+print(paste("KNN Accuracy:", accuracy))
+
+
